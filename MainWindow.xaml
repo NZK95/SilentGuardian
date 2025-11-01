@@ -1,0 +1,41 @@
+﻿<Window x:Class="SilentGuardian.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SilentGuardian"
+        Icon="/assets/icons/SilentGuardian.ico"
+        Height="200" Width="400"
+        Background="#111111" FontSize="18">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="Start" Click="Start_Click"
+                    Background="#1E1E2F" Foreground="White"
+                    BorderThickness="0" FontWeight="Bold" 
+                    Height="80" Margin="10 0 10 0"
+                    VerticalAlignment="Center"/>
+
+            <Button Grid.Column="1" Content="Stop" Click="Stop_Click"
+                    Background="#FF4D4D" Foreground="White"
+                    BorderThickness="0" FontWeight="Bold" 
+                    Height="80" Margin="0 0 10 0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"/>
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="0,10,0,0">
+            <Border Background="#222222" CornerRadius="8" Padding="10">
+                <TextBlock x:Name="StatusTextBlock" TextAlignment="Center" Foreground="White"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
