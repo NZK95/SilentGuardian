@@ -63,5 +63,19 @@ namespace SilentGuardian
                     MonitoringActivityStats.DifferenceBetweenX >= MonitoringConfig.Thresholds?.MouseAxisXThreshold;
         }
 
+        public static FileInfo GetLastVideo(string[] files)
+        {
+            return files.Select(f => new FileInfo(f))
+                .OrderByDescending(f => f.LastWriteTime)
+                .FirstOrDefault()!;
+        }
+        
+        public static (string name,string path) GetLastVideoProperties(FileInfo lastVideo)
+        {
+            var path = lastVideo.FullName;
+            var name = path.Replace(MonitoringConfig.PathToVideoRecords, string.Empty);
+            return (name, path);
+        }
+
     }
 }

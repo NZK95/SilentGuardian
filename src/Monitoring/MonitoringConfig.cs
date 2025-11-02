@@ -56,7 +56,7 @@ namespace SilentGuardian
         {
             BasePath = @$"C:\Users\User\Downloads";
             PathToConfig = Path.Combine(BasePath, "config.json");
-            PathToVideoRecords = @$"C:\Users\User\Downloads";
+            PathToVideoRecords = @$"C:\Users\User\Downloads\";
             PathToffmpeg = @"C:\Users\User\Desktop\ffmpeg-2025-10-21-git-535d4047d3-essentials_build\bin\ffmpeg.exe";
 
             Thresholds = GetThresholds();

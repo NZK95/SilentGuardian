@@ -1,9 +1,10 @@
-﻿using System.IO;
+﻿using NetEx.Hooks;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace SilentGuardian
 {
@@ -174,13 +175,12 @@ namespace SilentGuardian
                         await MonitoringService.StopVideoRecording();
 
                         var files = Directory.GetFiles(path: MonitoringConfig.PathToVideoRecords, searchPattern: "*.mp4");
-                        var lastVideo = files.Select(f => new FileInfo(f)).OrderByDescending(f => f.LastWriteTime).FirstOrDefault();
+                        var lastVideo = Utils.GetLastVideo(files);
 
-                        var lastVideoPath = lastVideo.FullName;
-                        var lastVideoName = lastVideoPath.Replace(MonitoringConfig.PathToVideoRecords, string.Empty);
+                        (string name, string path) = Utils.GetLastVideoProperties(lastVideo);
 
-                        await using var stream = File.OpenRead(lastVideoPath);
-                        await Bot.SendVideo(ChatID, stream, caption: lastVideoName);
+                        await using var stream = File.OpenRead(path);
+                        await Bot.SendVideo(ChatID, stream, caption: name);
 
                         await MainWindow.Stop();
                         break;
