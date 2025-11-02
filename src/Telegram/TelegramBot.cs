@@ -167,6 +167,7 @@ namespace SilentGuardian
                     break;
 
                 case "/lock":
+                    await SendMessageAsync("🔒 Screen locked.");
                     SystemUtils.LockWorkStation();
                     break;
 

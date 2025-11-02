@@ -1,5 +1,7 @@
-﻿using System.Windows;
-using NetEx.Hooks;
+﻿using NetEx.Hooks;
+using System.Reflection;
+using System.Windows;
+using System.IO;
 
 namespace SilentGuardian
 {
@@ -9,6 +11,17 @@ namespace SilentGuardian
 
         public MainWindow()
         {
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                var name = new AssemblyName(args.Name).Name + ".dll";
+                var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Libs", name);
+
+                if (File.Exists(path))
+                    return Assembly.LoadFrom(path);
+
+                return null;
+            };
+
             InitializeComponent();
             _ = UpdateStatusText();
         }
@@ -29,8 +42,6 @@ namespace SilentGuardian
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
             if (_monitoringService.IsStarted) return;
-
-            StatusTextBlock.Text = "Status: Started";
 
             KeyboardHook.KeyDown += KeyboardHook_KeyDown;
             MouseHook.MouseClick += MouseHook_MouseClick;

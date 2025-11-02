@@ -136,7 +136,7 @@ namespace SilentGuardian
             if (Cts.Token.IsCancellationRequested)
                 return;
 
-            var pathToVideoRecord = Path.Combine(MonitoringConfig.BasePath, Utils.GetRecordFilePath());
+            var pathToVideoRecord = Utils.GetСurrentRecordFilePath();
             var psi = GetProcessStartInfo(pathToVideoRecord);
 
             VideoRecordingProcess = Process.Start(psi);

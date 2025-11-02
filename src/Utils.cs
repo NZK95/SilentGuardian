@@ -9,21 +9,21 @@ namespace SilentGuardian
             return $"Screenshot - {DateTime.Now.ToString("dd MMM yyyy - HH-mm-ss")}";
         }
 
-        public static string GetCurrentScreenshotPath()
-        {
-            var screenshotPath = @$"{GetCurrentScreenshotName()}.png";
-            return Path.Combine(MonitoringConfig.BasePath, screenshotPath);
-        }
-
         public static string GetRecordFileName()
         {
             return $"Video record - {DateTime.Now.ToString("dd MMM yyyy - HH-mm-ss")}";
         }
 
-        public static string GetRecordFilePath()
+        public static string GetCurrentScreenshotPath()
+        {
+            var screenshotPath = @$"{GetCurrentScreenshotName()}.png";
+            return Path.Combine(MonitoringConfig.PathToScreenshots, screenshotPath);
+        }
+
+        public static string GetСurrentRecordFilePath()
         {
             var recordFilePath = @$"{GetRecordFileName()}.mp4";
-            return Path.Combine(MonitoringConfig.BasePath, recordFilePath);
+            return Path.Combine(MonitoringConfig.PathToVideoRecords, recordFilePath);
         }
 
         public static string BuildAlarmMessage()
@@ -31,7 +31,7 @@ namespace SilentGuardian
             var t = MonitoringConfig.Thresholds;
 
             return $"🚨 Alarm - for " +
-                     $"{DateTime.Now.ToString("dd/M - H:m")}\n\n" +
+                     $"{DateTime.Now.ToString("dd MMM yyyy - HH:mm:ss")}\n\n" +
                      $"📊Activity Stats:\n" +
                      $"- Pressed keys (Threshold {t.PressedKeysThreshold}) - {MonitoringActivityStats.PressedKeysCount}\n" +
                      $"- Pressed mouse clicks (Threshold {t.PressedMouseClicksThreshold}) - {MonitoringActivityStats.PressedMouseClicksCount}\n" +
@@ -52,7 +52,7 @@ namespace SilentGuardian
         public static string BuildAboutMessage()
         {
             return "🌐 Developer: https://www.github.com/NZK95" +
-                        "\n🌐 SilentGuardian: https://www.github.com/NZK95/SilentGuarding";
+                        "\n🌐 SilentGuardian: https://github.com/NZK95/SilentGuardian";
         }
 
         public static bool IsActivityDetected()
@@ -76,6 +76,5 @@ namespace SilentGuardian
             var name = path.Replace(MonitoringConfig.PathToVideoRecords, string.Empty);
             return (name, path);
         }
-
     }
 }
