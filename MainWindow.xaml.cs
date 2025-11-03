@@ -11,29 +11,22 @@ namespace SilentGuardian
 
         public MainWindow()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
-                var name = new AssemblyName(args.Name).Name + ".dll";
-                var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Libs", name);
-
-                if (File.Exists(path))
-                    return Assembly.LoadFrom(path);
-
-                return null;
-            };
-
             InitializeComponent();
             _ = UpdateStatusText();
         }
 
         private async Task UpdateStatusText()
         {
+            const string STARTED = "Status: Started";
+            const string STOPPED = "Status: Stopped";
+
             while (true)
             {
-                if (_monitoringService.IsStarted)
-                    StatusTextBlock.Text = "Status: Started";
-                else
-                    StatusTextBlock.Text = "Status: Stopped";
+                if (_monitoringService.IsStarted && StatusTextBlock.Text != STARTED)
+                    StatusTextBlock.Text = STARTED;
+
+                if (!_monitoringService.IsStarted && StatusTextBlock.Text != STOPPED)
+                    StatusTextBlock.Text = STOPPED;
 
                 await Task.Delay(AppHelper.MONITOR_DELAY_MS);
             }
