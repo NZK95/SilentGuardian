@@ -29,6 +29,7 @@ namespace SilentGuardian
         private const string BOT_NAME = "SilentGuardian";
         private readonly BotCommand[] COMMANDS = new[]
         {
+                new BotCommand(command: "status", description: "Check current status."),
                 new BotCommand(command: "stop", description: "Stop guardian and all records."),
                 new BotCommand(command: "getvideo", description: "Stop guardian and send the last video from \"Videos\" folder."),
                 new BotCommand(command: "stopscreenshots", description: "Stop sending screenshots."),
@@ -160,6 +161,10 @@ namespace SilentGuardian
         {
             switch (message)
             {
+                case "/status":
+                    var status = MonitoringService.IsStarted ? "Started." : "Stopped.";
+                    await SendMessageAsync(status);
+                    break;
                 case "/about":
                     await SendMessageAsync(Utils.BuildAboutMessage());
                     break;
