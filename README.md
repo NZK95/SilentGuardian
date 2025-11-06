@@ -8,7 +8,7 @@ SilentGuardian is a C# application designed to monitor user activity on a Window
 - Captures screenshots <br>
 - Records screen video <br>
 - Status monitoring via Telegram bot <br>
-- Behavior and thresholds fully configurable through config.json <br>
+- Behavior and thresholds fully configurable through ```config.json``` <br>
 
 ## Requirements
 Last release from [`releases`](https://github.com/NZK95/SilentGuardian/releases) <br>
