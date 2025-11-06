@@ -18,7 +18,7 @@ It communicates with a Telegram bot for remote control and notifications.
 - Behavior and thresholds fully configurable through ```config.json``` <br>
 
 ## Requirements
-Last release from [`releases`](https://github.com/NZK95/SilentGuardian/releases) <br>
+Last version of SilentGuardian from [`releases`](https://github.com/NZK95/SilentGuardian/releases) <br>
 Windows 10 or later <br>
 Telegram Bot Token <br>
 
@@ -27,4 +27,4 @@ Telegram Bot Token <br>
 2. Same thing with  ```chatID``` with ```@userinfobot``` bot. <br>
 3. Write first message to your bot. <br>
 4. Start and use program. <br>
-> Optionally configure ```config.json```.
+0. Optionally configure ```config.json```.
