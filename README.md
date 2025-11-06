@@ -22,9 +22,12 @@ Last version of SilentGuardian from [`releases`](https://github.com/NZK95/Silent
 Windows 10 or later <br>
 Telegram Bot Token <br>
 
-## Installation
+## Usage
 1. Get and paste into ```config.json``` a bot token with ```BotFather``` bot in Telegram. <br>
 2. Same thing with  ```chatID``` with ```@userinfobot``` bot. <br>
 3. Write first message to your bot. <br>
 4. Start and use program. <br>
 0. Optionally configure ```config.json```.
+
+## Troubleshooting & Support
+If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/SilentGuardian/issues).<br>
