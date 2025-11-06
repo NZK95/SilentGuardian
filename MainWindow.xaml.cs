@@ -7,12 +7,29 @@ namespace SilentGuardian
 {
     public partial class MainWindow : Window
     {
-        private static MonitoringService _monitoringService = new MonitoringService();
+        public static MonitoringService MonitoringService { get; private set; }
+        public static CancellationTokenSource? Cts { get; private set; }
+        public static TelegramBot? TelegramBot { get; private set; }
 
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += MainWindow_Loaded;
+        }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await InitializeBotAndServices();
             _ = UpdateStatusText();
+        }
+
+        private async Task InitializeBotAndServices()
+        {
+            MonitoringService = new MonitoringService();
+            TelegramBot = new TelegramBot();
+
+            await TelegramBot.InitAsync();
+            await TelegramBot.SendMessageAsync("▶️ The program is running.");
         }
 
         private async Task UpdateStatusText()
@@ -22,44 +39,68 @@ namespace SilentGuardian
 
             while (true)
             {
-                if (_monitoringService.IsStarted && StatusTextBlock.Text != STARTED)
+                if (MonitoringService.IsStarted && StatusTextBlock.Text != STARTED)
                     StatusTextBlock.Text = STARTED;
 
-                if (!_monitoringService.IsStarted && StatusTextBlock.Text != STOPPED)
+                if (!MonitoringService.IsStarted && StatusTextBlock.Text != STOPPED)
                     StatusTextBlock.Text = STOPPED;
 
                 await Task.Delay(AppHelper.MONITOR_DELAY_MS);
             }
         }
 
+        private static DateTime _lastMessageTime = DateTime.MinValue;
+        private static readonly TimeSpan _messageCooldown = TimeSpan.FromSeconds(3);
+
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
-            if (_monitoringService.IsStarted) return;
+            if (MonitoringService.IsStarted)
+            {
+                if (DateTime.Now - _lastMessageTime > _messageCooldown)
+                {
+                    await TelegramBot.SendMessageAsync("⚠️ Already started.");
+                    _lastMessageTime = DateTime.Now;
+                }
+                return;
+            }
 
             KeyboardHook.KeyDown += KeyboardHook_KeyDown;
             MouseHook.MouseClick += MouseHook_MouseClick;
             MouseHook.MouseMove += MouseHook_MouseMove;
 
-            await _monitoringService.Start();
+            Cts = new CancellationTokenSource();
+            await MonitoringService.Start();
 
             KeyboardHook.Install();
             MouseHook.Install();
         }
 
-        public async void Stop_Click(object sender, RoutedEventArgs e)
-        {
-            await Stop();
-        }
-
         public static async Task Stop()
         {
-            if (!_monitoringService.IsStarted) return;
+            if (!MonitoringService.IsStarted)
+            {
+                if (DateTime.Now - _lastMessageTime > _messageCooldown)
+                {
+                    await TelegramBot.SendMessageAsync("⚠️ Already stopped.");
+                    _lastMessageTime = DateTime.Now;
+                }
+                return;
+            }
 
-            await _monitoringService.Stop();
+            await ResetCancellationToken();
+            await MonitoringService.Stop();
             MonitoringActivityStats.ResetActivity();
 
             KeyboardHook.Uninstall();
             MouseHook.Uninstall();
+        }
+
+
+        private static async Task ResetCancellationToken()
+        {
+            try { Cts.Cancel(); }
+            catch (Exception) { }
+            finally { Cts.Dispose(); }
         }
 
         private void KeyboardHook_KeyDown(NetEx.Hooks.KeyEventArgs e)
@@ -81,5 +122,7 @@ namespace SilentGuardian
             MonitoringActivityStats.DifferenceBetweenX = Math.Abs(e.X - MonitoringActivityStats.StartCordinates.Value.X);
             MonitoringActivityStats.DifferenceBetweenY = Math.Abs(e.Y - MonitoringActivityStats.StartCordinates.Value.Y);
         }
+
+        private async void Stop_Click(object sender, RoutedEventArgs e) => await Stop();
     }
 }

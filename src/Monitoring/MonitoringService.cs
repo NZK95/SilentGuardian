@@ -7,45 +7,38 @@ namespace SilentGuardian
 {
     public class MonitoringService
     {
-        public bool IsStarted { get; private set; } = false;
-        public bool IsAlarmMessageSent { get; private set; }
-        public bool AreScreenshotsTaking { get; private set; }
-        public bool IsScreenRecording { get; private set; }
+        public static bool IsStarted { get; private set; } = false;
+        public static bool DisableScreenshots { get; set; } = false;
+        public static bool IsAlarmMessageSent { get; private set; }
+        public static bool IsScreenRecording { get; private set; }
+        public static bool AreScreenshotsTaking { get; set; }
 
-        public CancellationTokenSource? Cts { get; private set; }
-        public TelegramBot? TelegramBot { get; private set; }
         public Task? MonitoringTask { get; private set; }
         public static Process? VideoRecordingProcess { get; private set; }
 
         public async Task Start()
         {
-            await InitializeTelegramBotAndToken();
-            await TelegramBot.SendMessageAsync("✅ Started.");
+            await MainWindow.TelegramBot.SendMessageAsync("✅ Guardian started.");
 
             IsStarted = true;
-            IsAlarmMessageSent = IsScreenRecording = AreScreenshotsTaking = false;
-
+            IsAlarmMessageSent = IsScreenRecording = AreScreenshotsTaking = DisableScreenshots = false;
             MonitoringTask = Task.Run(() => MonitorMetricsAsync());
         }
 
         public async Task Stop()
         {
-            await TelegramBot.SendMessageAsync("🛑 Stopped.");
+            await MainWindow.TelegramBot.SendMessageAsync("🛑 Guardian stopped.");
 
-            IsScreenRecording = AreScreenshotsTaking = IsStarted = false;
-
-            await ResetCancellationToken();
-            await StopVideoRecording();
-
+            IsStarted = IsScreenRecording = AreScreenshotsTaking = IsAlarmMessageSent = DisableScreenshots = false;
             MonitoringTask = null;
-            TelegramBot = null;
-            Cts = null;
+            await StopVideoRecording();
         }
 
         public static async Task StopVideoRecording()
         {
             if (MonitoringConfig.LogicOptions.RecordScreen && VideoRecordingProcess != null)
             {
+                await MainWindow.TelegramBot.SendMessageAsync("🛑 Video recording stopped.");
                 await VideoRecordingProcess.StandardInput.WriteLineAsync("q");
                 await VideoRecordingProcess.WaitForExitAsync();
                 VideoRecordingProcess.Dispose();
@@ -53,34 +46,26 @@ namespace SilentGuardian
             }
         }
 
-        private async Task InitializeTelegramBotAndToken()
+        public static async Task LockScreen()
         {
-            Cts = new CancellationTokenSource();
-            TelegramBot = new TelegramBot(Cts);
+            if(MonitoringService.IsStarted)
+                await MainWindow.Stop();
 
-            await TelegramBot.InitAsync();
-        }
-
-        private async Task ResetCancellationToken()
-        {
-            try { Cts.Cancel(); }
-            catch (Exception) { }
-            finally { Cts.Dispose(); }
+            SystemUtils.LockWorkStation();
         }
 
         private async Task MonitorMetricsAsync()
         {
-            while (!Cts.Token.IsCancellationRequested)
+            while (!MainWindow.Cts.Token.IsCancellationRequested)
             {
                 if (AreScreenshotsTaking || IsScreenRecording || !Utils.IsActivityDetected())
                 {
-                    await Task.Delay(AppHelper.MONITOR_DELAY_MS, Cts.Token);
+                    await Task.Delay(AppHelper.MONITOR_DELAY_MS, MainWindow.Cts.Token);
                     continue;
                 }
 
                 await HandleActivityDetectedAsync();
-
-                await Task.Delay(AppHelper.MONITOR_DELAY_MS, Cts.Token);
+                await Task.Delay(AppHelper.MONITOR_DELAY_MS, MainWindow.Cts.Token);
             }
         }
 
@@ -88,52 +73,46 @@ namespace SilentGuardian
         {
             if (!IsAlarmMessageSent)
             {
-                await SendMessageAsync(Utils.BuildAlarmMessage());
+                await MainWindow.TelegramBot.SendMessageAsync(Utils.BuildAlarmMessage());
                 IsAlarmMessageSent = true;
             }
 
             if (MonitoringConfig.LogicOptions.AutoLock)
             {
-                await SendMessageAsync("🔒 Automatic window locking.");
-                await MainWindow.Stop();
-                SystemUtils.LockWorkStation();
+                await MainWindow.TelegramBot.SendMessageAsync("🔒 Automatic window locking.");
+                await LockScreen();
             }
 
-            if (MonitoringConfig.LogicOptions.TakeScreenshots && !AreScreenshotsTaking)
+            if (MonitoringConfig.LogicOptions.TakeScreenshots && !AreScreenshotsTaking && !DisableScreenshots)
             {
+                await MainWindow.TelegramBot.SendMessageAsync(Utils.BuildScreenshotMessage());
                 AreScreenshotsTaking = true;
-                await SendMessageAsync(Utils.BuildScreenshotMessage());
                 _ = StartScreenshotsAsync();
             }
 
             if (MonitoringConfig.LogicOptions.RecordScreen && !IsScreenRecording)
             {
+                await MainWindow.TelegramBot.SendMessageAsync(Utils.BuildVideoRecordingMessage());
                 IsScreenRecording = true;
-                await SendMessageAsync(Utils.BuildVideoRecordingMessage());
                 _ = StartScreenRecording();
             }
-        }
-
-        private async Task SendMessageAsync(string message)
-        {
-            await TelegramBot.SendMessageAsync(message);
         }
 
         private async Task StartScreenshotsAsync()
         {
             while (AreScreenshotsTaking)
             {
-                if (Cts.Token.IsCancellationRequested)
+                if (MainWindow.Cts.Token.IsCancellationRequested)
                     return;
 
-                await MakeScreenshotAsync();
-                await Task.Delay(MonitoringConfig.Thresholds.ScreenshotTimeIntervalMs, Cts.Token);
+                await MakeScreenshotAndSendAsync();
+                await Task.Delay(MonitoringConfig.Thresholds.ScreenshotTimeIntervalMs, MainWindow.Cts.Token);
             }
         }
 
         private async Task StartScreenRecording()
         {
-            if (Cts.Token.IsCancellationRequested)
+            if (MainWindow.Cts.Token.IsCancellationRequested)
                 return;
 
             var pathToVideoRecord = Utils.GetСurrentRecordFilePath();
@@ -154,7 +133,7 @@ namespace SilentGuardian
             };
         }
 
-        private async Task MakeScreenshotAsync()
+        public static async Task MakeScreenshotAndSendAsync()
         {
             var width = SystemUtils.GetSystemMetrics(SystemUtils.SM_CXSCREEN);
             var height = SystemUtils.GetSystemMetrics(SystemUtils.SM_CYSCREEN);
@@ -169,7 +148,7 @@ namespace SilentGuardian
 
                 bmp.Save(currentScreenshotPath, ImageFormat.Png);
 
-                await TelegramBot.SendImageAsync(
+                await MainWindow.TelegramBot.SendImageAsync(
                     imagePath: currentScreenshotPath,
                     caption: caption
                     );

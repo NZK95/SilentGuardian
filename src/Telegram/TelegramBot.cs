@@ -30,14 +30,40 @@ namespace SilentGuardian
         private readonly BotCommand[] COMMANDS = new[]
         {
                 new BotCommand(command: "stop", description: "Stop guardian and all records."),
+                new BotCommand(command: "getvideo", description: "Stop guardian and send the last video from \"Videos\" folder."),
+                new BotCommand(command: "stopscreenshots", description: "Stop sending screenshots."),
+                new BotCommand(command: "lock", description: "Switch screen to lock screen (Win + L)."),
                 new BotCommand(command: "about", description: "Show author information."),
-                new BotCommand(command: "video", description: "Stop guardian and send video."),
-                new BotCommand(command: "lock", description: "Switch screen to lock screen (Win + L).")
+                new BotCommand(command: "makescreenshot", description: "Make and send screenshot of current screen.")
         };
 
-        public TelegramBot(CancellationTokenSource cts)
+        public TelegramBot()
         {
-            Cts = cts;
+            Cts = new CancellationTokenSource();
+        }
+
+        public async Task InitAsync()
+        {
+            DeserializeTokenAndChatID();
+            Bot = new TelegramBotClient(TokenBot);
+
+            await IgnoreOldMessages();
+
+            Bot.StartReceiving(errorHandler: HandleErrorAsync,
+                               updateHandler: HandleUpdateAsync,
+                               cancellationToken: Cts.Token,
+                               receiverOptions: new Telegram.Bot.Polling.ReceiverOptions() { AllowedUpdates = Array.Empty<UpdateType>() });
+
+            var currentCommands = await Bot.GetMyCommands();
+            var currentName = await Bot.GetMyName();
+
+            if (!CommandsAreEqual(currentCommands, COMMANDS) || currentName.Name != BOT_NAME)
+            {
+                await Bot.SetMyCommands(COMMANDS);
+                await Bot.SetMyName(BOT_NAME);
+            }
+
+            var me = Bot.GetMe();
         }
 
         public async Task SendImageAsync(string imagePath, string caption)
@@ -74,30 +100,6 @@ namespace SilentGuardian
                 }
                 catch (Exception) { }
             }
-        }
-
-        public async Task InitAsync()
-        {
-            DeserializeTokenAndChatID();
-            Bot = new TelegramBotClient(TokenBot);
-
-            await IgnoreOldMessages();
-
-            Bot.StartReceiving(errorHandler: HandleErrorAsync,
-                               updateHandler: HandleUpdateAsync,
-                               cancellationToken: Cts.Token,
-                               receiverOptions: new Telegram.Bot.Polling.ReceiverOptions() { AllowedUpdates = Array.Empty<UpdateType>() });
-
-            var currentCommands = await Bot.GetMyCommands();
-            var currentName = await Bot.GetMyName();
-
-            if (!CommandsAreEqual(currentCommands, COMMANDS) || currentName.Name != BOT_NAME)
-            {
-                await Bot.SetMyCommands(COMMANDS);
-                await Bot.SetMyName(BOT_NAME);
-            }
-
-            var me = Bot.GetMe();
         }
 
         private void DeserializeTokenAndChatID()
@@ -168,14 +170,21 @@ namespace SilentGuardian
 
                 case "/lock":
                     await SendMessageAsync("🔒 Screen locked.");
-                    SystemUtils.LockWorkStation();
+                    await MonitoringService.LockScreen();
                     break;
 
-                case "/video":
+                case "/getvideo":
                     {
                         await MonitoringService.StopVideoRecording();
 
                         var files = Directory.GetFiles(path: MonitoringConfig.PathToVideoRecords, searchPattern: "*.mp4");
+
+                        if (files.Length == 0)
+                        {
+                            await SendMessageAsync("⛔ No available videos.");
+                            return;
+                        }
+
                         var lastVideo = Utils.GetLastVideo(files);
 
                         (string name, string path) = Utils.GetLastVideoProperties(lastVideo);
@@ -183,9 +192,35 @@ namespace SilentGuardian
                         await using var stream = File.OpenRead(path);
                         await Bot.SendVideo(ChatID, stream, caption: name);
 
-                        await MainWindow.Stop();
+                        if (MonitoringService.IsStarted)
+                            await MainWindow.Stop();
+
                         break;
                     }
+
+                case "/stopscreenshots":
+                    {
+                        if (!MonitoringConfig.LogicOptions.TakeScreenshots)
+                        {
+                            await SendMessageAsync("Enable this option in config.json !");
+                            return;
+                        }
+
+                        if (!MonitoringService.AreScreenshotsTaking)
+                        {
+                            await SendMessageAsync("Screenshots are not being taken.");
+                            return;
+                        }
+
+                        MonitoringService.AreScreenshotsTaking = false;
+                        MonitoringService.DisableScreenshots = true;
+                        await SendMessageAsync("Screenshots are disabled.");
+                        break;
+                    }
+
+                case "/makescreenshot":
+                    await MonitoringService.MakeScreenshotAndSendAsync();
+                    break;
             }
         }
     }
