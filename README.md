@@ -8,7 +8,7 @@ It communicates with a Telegram bot for remote control and notifications.
   <img src="https://github.com/NZK95/SilentGuardian/blob/master/docs/images/SilentGuardian%20%231.png">
 </p>
 
-## Key Features
+## Features
 - Global mouse and keyboard activity hooks <br>
 - Activity analysis and behavior monitoring <br>
 - Locks the workstation (Autolock on alert is too available) <br>
