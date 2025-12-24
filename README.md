@@ -4,10 +4,6 @@
 SilentGuardian is a C# application designed to monitor user activity on a Windows PC and trigger alerts based on configurable behavioral conditions. <br>
 It communicates with a Telegram bot for remote control and notifications.
 
-<p align="center">
-  <img src="https://github.com/NZK95/SilentGuardian/blob/master/docs/images/SilentGuardian%20%231.png">
-</p>
-
 ## Features
 - Global mouse and keyboard activity hooks <br>
 - Activity analysis and behavior monitoring <br>
