@@ -11,9 +11,10 @@
 - Behavior and thresholds fully configurable through ```config.json``` <br>
 
 ## Requirements
-Last version of SilentGuardian from [`releases`](https://github.com/NZK95/SilentGuardian/releases) <br>
-Windows 10 or later <br>
-Telegram Bot Token <br>
+- Last version of SilentGuardian from [`releases`](https://github.com/NZK95/SilentGuardian/releases) <br>
+- Windows 10 or later <br>
+- Telegram Bot Token <br>
+- Telegram Chat ID <br>
 
 ## Usage
 1. Get and paste into ```config.json``` a bot token with ```BotFather``` bot in Telegram. <br>
@@ -24,6 +25,9 @@ Telegram Bot Token <br>
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/SilentGuardian/issues).<br>
+
+## Resources
+[Telegram Bot API](https://core.telegram.org/bots/api) <br>
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
