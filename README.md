@@ -23,11 +23,13 @@
 4. Start and use program. <br>
 0. Optionally configure ```config.json```.
 
-## Troubleshooting
-If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/SilentGuardian/issues).<br>
 
 ## Resources
 [Telegram Bot API](https://core.telegram.org/bots/api) <br>
+
+
+## Troubleshooting
+If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/SilentGuardian/issues).<br>
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
